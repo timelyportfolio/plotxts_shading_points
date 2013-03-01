@@ -1,3 +1,5 @@
+#slight changes made;  please note copyright and original source
+
 #   xtsExtra: Extensions to xts during GSOC-2012
 #
 #   Copyright (C) 2012  Michael Weylandt: michael.weylandt@gmail.com
@@ -359,7 +361,8 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   
   mtext(side = 2 + 2*(ylab.axis == "right") + 1*(ylab.axis == "top"), text = if(ylab.axis == "none") "" else ylab, 
         line = 3 - 2.5*(ylab.axis == "top"), cex = par("cex.lab"), col = par("col.lab"))
-  ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
+  ep <- axTicksByTime(x, major.ticks, format.labels = major.format,ends=FALSE)
+  #ep <- ep[seq(1,length(ep),by=2)]
   
   if(!missing(blocks)){
     do_add.shading(blocks, ylim)
@@ -376,8 +379,8 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   
   if(axes) {
     if(have_x_axis){
-      if(minor.ticks) axis(1L, at = xy$x, labels = FALSE, col = par("col.axis"))
-      axis(1L, at = xy$x[ep], labels = names(ep), lwd = 1L, col = par("col.axis"),
+      if(minor.ticks) axis(1L, at = xy$x[endpoints(x,"months")], labels = FALSE, col = "black", lwd.ticks=0.5)
+      axis(1L, at = xy$x[ep], labels = names(ep[-length(ep)]), lwd = 1L, col = "black",col.axis="black",
            mgp = if(any(grepl("\n",names(ep), fixed = TRUE))) c(3, 2, 0) else c(3,1,0))  
       # Not sure why I have to force col.axis but it seems I do
     }
