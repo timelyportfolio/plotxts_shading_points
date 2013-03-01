@@ -1,0 +1,78 @@
+For some reason, I feel like have much better control with [plot.xts function](http://timelyportfolio.blogspot.com/search/label/plot.xts)
+from the [xtsExtra package](https://r-forge.r-project.org/scm/viewvc.php/pkg/xtsExtra/?root=xts) described [here](http://tradeblotter.wordpress.com/2012/11/23/xts-and-gsoc-2012/) over some of the other more refined R graphical packages.  Maybe, it is just my simple mind, but recently I wanted to shade holding periods with points for buy and sale dates.  With plot.xts from xtsExtra I was able to quickly and easily generate the following plot.  I did have to slightly amend the original plot.xts function as seen [here](https://gist.github.com/timelyportfolio/5062164), but it seemed more natural and like much less of a struggle.
+
+
+```{r echo=FALSE,warning=FALSE,error=FALSE,message=FALSE, fig.width=7, fig.height=4}
+require(RColorBrewer)
+require(quantmod)
+require(xtsExtra)
+source("https://raw.github.com/timelyportfolio/plotxts_shading_points/master/plot.R")
+
+jpy <- getSymbols("DEXJPUS",src="FRED",auto.assign=FALSE)
+
+#define array of buy dates
+buydates = c("2010-08-20",
+               "2011-02-07",
+               "2011-03-30",
+               "2011-10-14",
+               "2012-06-21",
+               "2012-10-25")
+
+#define a vector of sell dates
+selldates = c("2010-10-08",
+             "2011-03-02",
+             "2011-06-01",
+             "2012-05-31",
+             "2012-08-22",
+             format(Sys.Date(),"%Y-%m-%d"))  #fill today - don't think this is necessary
+
+custom.panel <- function(index,x,...) {
+  default.panel(index,x,...)
+  abline(h=pretty(c(par("yaxp")[1],par("yaxp")[2]),n=par("yaxp")[3]),col="gray60",lty=3)
+  abline(h=par("usr")[3], col="black")
+  axis(side=2,col="gray60",col.axis="black",lwd=0,lwd.ticks=FALSE,las=1,
+       at=pretty(c(par("yaxp")[1],par("yaxp")[2]),n=abs(par("yaxp")[3])),
+       labels=pretty(c(par("yaxp")[1],par("yaxp")[2]),n=abs(par("yaxp")[3])))
+  points(x=index[which(index(x) %in% as.Date(buydates))],
+         y=x[which(index(x) %in% as.Date(buydates)),],cex=1,pch=19,
+         col="darkolivegreen3")
+  points(x=index[which(index(x) %in% as.Date(selldates))],
+         y=x[which(index(x) %in% as.Date(selldates)),],cex=1,pch=19,
+         col="indianred3")
+  #to add reference lines to indicate entry level
+  #I'm not sure it is necessary but if you like it uncomment below
+  #for(i in 1:(length(startdates))) {
+  #  segments(x0=index[which(index(x) == as.Date(startdates[i]))],
+  #           x1=index[which(index(x) == as.Date(enddates[i]))],,
+  #           y0=x[which(index(x) == as.Date(startdates[i])),],
+  #           y1=x[which(index(x) == as.Date(startdates[i])),])
+  #}
+}
+
+
+plot.xts(jpy["2009-12::"],  #limit to Dec 2009 to Current so more easily visible
+         col = brewer.pal(9,"Blues")[c(7)],  #get two blues that will look ok
+         lwd = 2,   #line width; will do 2
+         las = 1,  #do not rotate y axis labels
+         bty="n",
+         auto.grid=FALSE,
+         major.format="%b %Y",
+         major.ticks="years",
+         minor.ticks=FALSE,
+         col.axis="transparent",
+         yax.loc="none",
+         cex.axis=0.8,
+         panel=custom.panel,
+         main = NA,  #will do title later so we have more control
+         blocks = list(start.time=buydates,  #overlay blocks for periods owned
+                       end.time=selldates,col="gray90"))
+
+#define title separately so we have more control
+title(main = "US$/Japanese Yen from St. Louis Federal Reserve (FRED)",
+      outer=TRUE,
+      line=-2,
+      adj=0.05)
+
+text(x=0.05,y=0.1,label="holding periods shaded",adj=0,font=3,cex=0.8)
+```
+
